@@ -107,6 +107,12 @@ x = 0
 y = 1
 
 [[keyboard.bindings]]
+key = "C"
+mods = "Control"
+mode = "~Vi"
+chars = "\u0003"
+
+[[keyboard.bindings]]
 action = "Paste"
 key = "V"
 mods = "Control"
@@ -114,7 +120,7 @@ mods = "Control"
 [[keyboard.bindings]]
 action = "Copy"
 key = "C"
-mods = "Control"
+mods = "Control|Shift"
 
 [[keyboard.bindings]]
 action = "PasteSelection"
