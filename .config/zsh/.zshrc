@@ -13,6 +13,7 @@ if [[ -e /usr/share/zsh/manjaro-zsh-prompt ]]; then
   source /usr/share/zsh/manjaro-zsh-prompt
 fi
 
+
 # shellcheck shell=bash
 
 # =============================================================================
@@ -176,10 +177,19 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 
-# API KEYS
+# Load secrets
+if [ -f ~/.zsh_secrets ]; then
+    source ~/.zsh_secrets
+fi
 
 # GPA dev mode
 alias gpa='/home/mohak/Code-Work/projects/github-project-assistant/venv/bin/gpa'
 # alias mdtool='/home/mohak/Code-Work/projects/mdtool/venv/bin/gpa'
 # GO Path
 export PATH=$PATH:/home/mohak/go/bin
+
+# Spotifyd
+# alias sptstart='~/.config/spotifyd/spotify-manager.sh start'
+# alias sptstop='~/.config/spotifyd/spotify-manager.sh stop'
+# alias sptrestart='~/.config/spotifyd/spotify-manager.sh restart'
+# eval "$(starship init zsh)"
