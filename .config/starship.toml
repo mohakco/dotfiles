@@ -1,120 +1,51 @@
-format = """
-$git_branch\
-$git_status\
-$python\
-$nodejs\
-$c\
-$cpp\
-$rust\
-$java\
-$golang\
-$docker_context\
-$kubernetes
-$battery    $time
-$os [$username](yellow)[@](cyan)[$hostname](green) $directory$character
-"""
+"$schema" = 'https://starship.rs/config-schema.json'
+format = """$all $fill $cmd_duration
+$character"""
+
+add_newline = false
 
 [character]
-success_symbol = '[➜](bold green)'
-error_symbol = '[➜](bold red)'
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
 
-[battery]
-full_symbol = "• "
-charging_symbol = "⇡ "
-discharging_symbol = "⇣ "
+[cmd_duration]
+min_time = 10
+show_milliseconds = true
+format = "[$duration](bright-black)"
 
-[[battery.display]]
-threshold = 100
-
-[time]
-format = "[$time]($style)"
-disabled = false
-
-[username]
-show_always = true
-format = "[$user]($style)"
-
-[hostname]
-ssh_only = false
-format = "[$hostname]($style)"
-
-[c]
-format = "[$symbol($version )]($style)"
-symbol = " "
-
-[directory]
-read_only = " "
-
-[docker_context]
-symbol = " "
-format = "[$symbol$context]($style)"
-
-[elm]
-symbol = " "
+[fill]
+symbol = ' '
 
 [golang]
-symbol = " "
-format = "[$symbol($version )]($style)"
-
-[hg_branch]
-symbol = " "
-
-[java]
-symbol = " "
-format = "[$symbol($version )]($style)"
-
-[memory_usage]
-symbol = " "
+symbol = " "
 
 [nodejs]
-format = "[$symbol($version )]($style)"
-symbol = " "
+detect_extensions = []
 
-[os]
+[git_metrics]
 disabled = false
+format = '(([ $added ]($added_style))([ $deleted ]($deleted_style)))'
+only_nonzero_diffs = true
+added_style = 'green'
+deleted_style = 'red'
 
-[os.symbols]
-Alpine = " "
-Amazon = " "
-Android = " "
-Arch = " "
-CentOS = " "
-Debian = " "
-DragonFly = " "
-Emscripten = " "
-EndeavourOS = " "
-Fedora = " "
-FreeBSD = " "
-Garuda = "﯑ "
-Gentoo = " "
-HardenedBSD = "ﲊ "
-Illumos = " "
-Linux = " "
-Macos = " "
-Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
-Mint = " "
-NetBSD = " "
-NixOS = " "
-OpenBSD = " "
-openSUSE = " "
-OracleLinux = " "
-Pop = " "
-Raspbian = " "
-Redhat = " "
-RedHatEnterprise = " "
-Redox = " "
-Solus = "ﴱ "
-SUSE = " "
-Ubuntu = " "
-Unknown = " "
-Windows = " "
+[line_break]
+disabled = true
 
-[package]
-symbol = " "
-format = "[$symbol($version )]($style)"
+[jobs]
+disabled = true
 
-[python]
-symbol = " "
-format = "[$symbol($version )]($style)"
+[battery]
+disabled = true
+
+[env_var.SOFTWARE_UPDATE_AVAILABLE]
+variable = 'SOFTWARE_UPDATE_AVAILABLE'
+format = '[$env_value]($style)'
+default = ''
+style = 'cyan'
+
+[env_var.DOTFILES_UPDATE_AVAILABLE]
+variable = 'DOTFILES_UPDATE_AVAILABLE'
+format = '[$env_value]($style)'
+default = ''
+style = 'cyan'
