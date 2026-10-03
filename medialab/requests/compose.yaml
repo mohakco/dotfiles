@@ -1,0 +1,27 @@
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:v3.5.0
+    container_name: seerr
+    init: true
+    user: ${PUID}:${PGID}
+    restart: unless-stopped
+    depends_on:
+      init: { condition: service_completed_successfully }
+    environment:
+      TZ: ${TZ}
+      PORT: 5055
+    ports: ["127.0.0.1:5055:5055"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ${CONFIG_DIR}/seerr:/app/config
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: requests
+      tsdproxy.port.1: 443/https:5055/http
+      homepage.group: Media
+      homepage.name: Seerr
+      homepage.icon: jellyseerr.png
+      homepage.href: https://requests.${TAILNET}
+      homepage.widget.type: seerr
+      homepage.widget.url: http://seerr:5055
+      homepage.widget.key: "{{HOMEPAGE_FILE_SEERR_KEY}}"

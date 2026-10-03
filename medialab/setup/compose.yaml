@@ -1,0 +1,32 @@
+x-setup: &setup
+  image: ghcr.io/astral-sh/uv:0.12.23-python3.13-alpine
+  restart: "no"
+  working_dir: /setup
+  env_file: .env
+  environment:
+    ADMIN_PASSWORD: ${ADMIN_PASSWORD:?run via make}
+    SONARR_API_KEY: ${SONARR_API_KEY}
+    RADARR_API_KEY: ${RADARR_API_KEY}
+    PROWLARR_API_KEY: ${PROWLARR_API_KEY}
+    DATA_DIR: ${DATA_DIR}
+  extra_hosts: ["host.docker.internal:host-gateway"]
+  volumes:
+    - ./setup:/setup:ro
+    - ${CONFIG_DIR}:/config
+    - { type: bind, source: "${DATA_DIR}", target: /data, bind: { create_host_path: false } }
+    - uv-cache:/root/.cache/uv
+
+services:
+  init:
+    <<: *setup
+    container_name: medialab-init
+    command: [uv, run, --script, main.py, init]
+
+  setup:
+    <<: *setup
+    container_name: medialab-setup
+    command: [uv, run, --script, main.py]
+    depends_on: [sonarr, radarr, prowlarr, bazarr, qbittorrent, seerr, flaresolverr]
+
+volumes:
+  uv-cache:

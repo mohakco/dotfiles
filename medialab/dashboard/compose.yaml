@@ -1,0 +1,29 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.4.0
+    container_name: homepage
+    restart: unless-stopped
+    depends_on:
+      init: { condition: service_completed_successfully }
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "*"
+      HOMEPAGE_VAR_JELLYFIN_URL: ${JELLYFIN_URL}
+      HOMEPAGE_VAR_JELLYFIN_PUBLIC_URL: ${JELLYFIN_PUBLIC_URL}
+      HOMEPAGE_FILE_JELLYFIN_KEY: /keys/jellyfin
+      HOMEPAGE_FILE_SEERR_KEY: /keys/seerr
+      HOMEPAGE_FILE_BAZARR_KEY: /keys/bazarr
+    ports: ["127.0.0.1:3000:3000"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./dashboard/settings.yaml:/app/config/settings.yaml:ro
+      - ./dashboard/services.yaml:/app/config/services.yaml:ro
+      - ./dashboard/widgets.yaml:/app/config/widgets.yaml:ro
+      - ./dashboard/docker.yaml:/app/config/docker.yaml:ro
+      - ./dashboard/bookmarks.yaml:/app/config/bookmarks.yaml:ro
+      - ${CONFIG_DIR}/homepage-keys:/keys:ro
+      - { type: bind, source: "${DATA_DIR}", target: /data, read_only: true, bind: { create_host_path: false } }
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: home
+      tsdproxy.port.1: 443/https:3000/http

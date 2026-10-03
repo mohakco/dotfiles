@@ -1,0 +1,15 @@
+title: medialab
+theme: dark
+color: slate
+headerStyle: clean
+statusStyle: dot
+layout:
+  Media:
+    style: row
+    columns: 3
+  Downloads:
+    style: row
+    columns: 3
+  Infra:
+    style: row
+    columns: 3

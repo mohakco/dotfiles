@@ -1,0 +1,17 @@
+defaultProxyProvider: default
+docker:
+  local:
+    host: unix:///var/run/docker.sock
+    targetHostname: host.docker.internal
+    tryDockerInternalNetwork: true
+    defaultProxyProvider: default
+tailscale:
+  providers:
+    default:
+      authKeyFile: /run/secrets/ts_authkey
+  dataDir: /data/
+http:
+  port: 8080
+log:
+  level: info
+proxyAccessLog: false

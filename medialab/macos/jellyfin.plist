@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>org.jellyfin.server</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Applications/Jellyfin.app/Contents/MacOS/jellyfin</string>
+    <string>--datadir</string>
+    <string>@HOME@/Library/Application Support/jellyfin</string>
+    <string>--cachedir</string>
+    <string>@HOME@/Library/Caches/jellyfin</string>
+    <string>--webdir</string>
+    <string>/Applications/Jellyfin.app/Contents/Resources/jellyfin-web</string>
+    <string>--ffmpeg</string>
+    <string>/Applications/Jellyfin.app/Contents/MacOS/ffmpeg</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HTTP_PROXY</key>
+    <string>http://127.0.0.1:1080</string>
+    <key>HTTPS_PROXY</key>
+    <string>http://127.0.0.1:1080</string>
+    <key>NO_PROXY</key>
+    <string>localhost,127.0.0.1,host.docker.internal</string>
+  </dict>
+  <key>KeepAlive</key>
+  <dict>
+    <key>PathState</key>
+    <dict>
+      <key>@DATA_DIR@</key>
+      <true/>
+    </dict>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>@HOME@/Library/Logs/jellyfin.log</string>
+  <key>StandardErrorPath</key>
+  <string>@HOME@/Library/Logs/jellyfin.log</string>
+</dict>
+</plist>

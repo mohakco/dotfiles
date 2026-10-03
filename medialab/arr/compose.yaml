@@ -1,0 +1,122 @@
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:4.0.20.3014-ls326
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      SONARR__AUTH__APIKEY: ${SONARR_API_KEY:?run via make}
+      SONARR__AUTH__METHOD: Forms
+      SONARR__AUTH__REQUIRED: Enabled
+    ports: ["127.0.0.1:8989:8989"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ${CONFIG_DIR}/sonarr:/config
+      - { type: bind, source: "${DATA_DIR}", target: /data, bind: { create_host_path: false } }
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: sonarr
+      tsdproxy.port.1: 443/https:8989/http
+      homepage.group: Media
+      homepage.name: Sonarr
+      homepage.icon: sonarr.png
+      homepage.href: https://sonarr.${TAILNET}
+      homepage.widget.type: sonarr
+      homepage.widget.url: http://sonarr:8989
+      homepage.widget.key: ${SONARR_API_KEY}
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:6.4.4.10685-ls318
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      RADARR__AUTH__APIKEY: ${RADARR_API_KEY:?run via make}
+      RADARR__AUTH__METHOD: Forms
+      RADARR__AUTH__REQUIRED: Enabled
+    ports: ["127.0.0.1:7878:7878"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ${CONFIG_DIR}/radarr:/config
+      - { type: bind, source: "${DATA_DIR}", target: /data, bind: { create_host_path: false } }
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: radarr
+      tsdproxy.port.1: 443/https:7878/http
+      homepage.group: Media
+      homepage.name: Radarr
+      homepage.icon: radarr.png
+      homepage.href: https://radarr.${TAILNET}
+      homepage.widget.type: radarr
+      homepage.widget.url: http://radarr:7878
+      homepage.widget.key: ${RADARR_API_KEY}
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:2.6.5.5623-ls162
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:?run via make}
+      PROWLARR__AUTH__METHOD: Forms
+      PROWLARR__AUTH__REQUIRED: Enabled
+    ports: ["127.0.0.1:9696:9696"]
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: prowlarr
+      tsdproxy.port.1: 443/https:9696/http
+      homepage.group: Downloads
+      homepage.name: Prowlarr
+      homepage.icon: prowlarr.png
+      homepage.href: https://prowlarr.${TAILNET}
+      homepage.widget.type: prowlarr
+      homepage.widget.url: http://prowlarr:9696
+      homepage.widget.key: ${PROWLARR_API_KEY}
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:v1.6.2-ls366
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    ports: ["127.0.0.1:6767:6767"]
+    volumes:
+      - ${CONFIG_DIR}/bazarr:/config
+      - { type: bind, source: "${DATA_DIR}", target: /data, bind: { create_host_path: false } }
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: bazarr
+      tsdproxy.port.1: 443/https:6767/http
+      homepage.group: Media
+      homepage.name: Bazarr
+      homepage.icon: bazarr.png
+      homepage.href: https://bazarr.${TAILNET}
+      homepage.widget.type: bazarr
+      homepage.widget.url: http://bazarr:6767
+      homepage.widget.key: "{{HOMEPAGE_FILE_BAZARR_KEY}}"
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8.7.2
+    container_name: recyclarr
+    user: ${PUID}:${PGID}
+    command: [sync]
+    restart: "no"
+    depends_on:
+      setup: { condition: service_completed_successfully }
+    env_file: .env
+    environment:
+      SONARR_API_KEY: ${SONARR_API_KEY}
+      RADARR_API_KEY: ${RADARR_API_KEY}
+    volumes:
+      - ${CONFIG_DIR}/recyclarr:/config
+      - ./arr/recyclarr.yml:/config/recyclarr.yml:ro
