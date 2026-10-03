@@ -26,7 +26,15 @@ services:
     <<: *setup
     container_name: medialab-setup
     command: [uv, run, --script, main.py]
-    depends_on: [sonarr, radarr, prowlarr, bazarr, qbittorrent, seerr, flaresolverr]
+    depends_on:
+      warp: { condition: service_healthy }
+      flaresolverr: { condition: service_healthy }
+      sonarr: &started { condition: service_started }
+      radarr: *started
+      prowlarr: *started
+      bazarr: *started
+      qbittorrent: *started
+      seerr: *started
 
 volumes:
   uv-cache:

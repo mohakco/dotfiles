@@ -51,4 +51,5 @@ jellyfin:
 	mkdir -p "$(dir $(PLIST))" "$(HOME)/Library/Logs"
 	sed -e 's|@HOME@|$(HOME)|g' -e 's|@DATA_DIR@|$(DATA_DIR)|g' macos/jellyfin.plist > "$(PLIST)"
 	-launchctl bootout gui/$$(id -u)/org.jellyfin.server
+	-pkill -x "Jellyfin Server"
 	launchctl bootstrap gui/$$(id -u) "$(PLIST)"

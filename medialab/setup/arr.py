@@ -54,7 +54,7 @@ def prowlarr():
     for label in {"warp", "flaresolverr"} - tags.keys():
         tags[label] = api.tag.create(label)["id"]
     proxies = {p["name"] for p in api.indexer_proxy.get()}
-    for name, values in {"FlareSolverr": {"host": "http://warp:8191/", "requestTimeout": 60},
+    for name, values in {"FlareSolverr": {"host": "http://flaresolverr:8191/", "requestTimeout": 60},
                          "Socks5": {"host": "warp", "port": 1080}}.items():
         if name not in proxies:
             schema = next(s for s in request("indexerProxy/schema") if s["implementation"] == name)

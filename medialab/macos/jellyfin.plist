@@ -6,15 +6,7 @@
   <string>org.jellyfin.server</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Applications/Jellyfin.app/Contents/MacOS/jellyfin</string>
-    <string>--datadir</string>
-    <string>@HOME@/Library/Application Support/jellyfin</string>
-    <string>--cachedir</string>
-    <string>@HOME@/Library/Caches/jellyfin</string>
-    <string>--webdir</string>
-    <string>/Applications/Jellyfin.app/Contents/Resources/jellyfin-web</string>
-    <string>--ffmpeg</string>
-    <string>/Applications/Jellyfin.app/Contents/MacOS/ffmpeg</string>
+    <string>/Applications/Jellyfin.app/Contents/MacOS/Jellyfin Server</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>

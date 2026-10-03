@@ -13,14 +13,31 @@ services:
     ports: ["127.0.0.1:1080:1080"]
     volumes:
       - ${CONFIG_DIR}/warp:/var/lib/cloudflare-warp
+    labels:
+      autoheal: "true"
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
     container_name: flaresolverr
     restart: unless-stopped
-    network_mode: service:warp
+    depends_on:
+      warp: { condition: service_healthy }
     environment:
       TZ: ${TZ}
+      HTTP_PROXY: http://warp:1080
+      HTTPS_PROXY: http://warp:1080
+      NO_PROXY: localhost,127.0.0.1
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8191/health"]
+      interval: 30s
+      start_period: 30s
+
+  autoheal:
+    image: willfarrell/autoheal:1.2.0
+    container_name: autoheal
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   tsdproxy:
     image: almeidapaulopt/tsdproxy:2.3.4
