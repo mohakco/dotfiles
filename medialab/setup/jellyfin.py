@@ -41,21 +41,31 @@ def api_key(jf):
     return keys(jf)["medialab"]
 
 
+def libraries(jf):
+    existing = {f["Name"] for f in jf.get("/Library/VirtualFolders").json()}
+    for name, (kind, folder) in LIBRARIES.items():
+        if name not in existing:
+            try:
+                jf.post("/Library/VirtualFolders", params={"name": name, "collectionType": kind},
+                        json={"LibraryOptions": {"PathInfos": [{"Path": f"{E['DATA_DIR']}/media/{folder}"}],
+                                                 "EnableRealtimeMonitor": True}})
+            except httpx.ReadTimeout:
+                raise SystemExit("Jellyfin cannot read the media drive yet: click Allow on the macOS prompt for "
+                                 "'Jellyfin Server' (removable volume), then run make up again")
+    for folder in jf.get("/Library/VirtualFolders").json():
+        if not folder["LibraryOptions"]["EnableRealtimeMonitor"]:
+            jf.post("/Library/VirtualFolders/LibraryOptions", json={
+                "Id": folder["ItemId"], "LibraryOptions": folder["LibraryOptions"] | {"EnableRealtimeMonitor": True}})
+    jf.post("/Library/Refresh")
+
+
 def wire():
     wait(f"{E['JELLYFIN_URL']}/health")
     jf = client(E["JELLYFIN_URL"], headers={"Authorization": AUTH})
     wizard(jf)
     token = jf.post("/Users/AuthenticateByName", json={"Username": USER, "Pw": PASSWORD}).json()["AccessToken"]
     jf.headers["Authorization"] = f'{AUTH}, Token="{token}"'
-    existing = {f["Name"] for f in jf.get("/Library/VirtualFolders").json()}
-    for name, (kind, folder) in LIBRARIES.items():
-        if name not in existing:
-            try:
-                jf.post("/Library/VirtualFolders", params={"name": name, "collectionType": kind, "refreshLibrary": True},
-                        json={"LibraryOptions": {"PathInfos": [{"Path": f"{E['DATA_DIR']}/media/{folder}"}]}})
-            except httpx.ReadTimeout:
-                raise SystemExit("Jellyfin cannot read the media drive yet: click Allow on the macOS prompt for "
-                                 "'Jellyfin Server' (removable volume), then run make up again")
+    libraries(jf)
     configure(jf, "/System/Configuration/encoding", **ENCODING)
     system = jf.get("/System/Configuration").json()
     system["RemoteClientBitrateLimit"] = int(E["REMOTE_BITRATE_MBPS"]) * 1_000_000
