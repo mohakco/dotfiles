@@ -1,4 +1,4 @@
-# Authelia (passkey login): forward auth for apps without SSO, OIDC for apps that speak it.
+# Authelia (passkey login) gating the web apps through Caddy forward auth.
 # Containers, because nixpkgs' Authelia web UI does not build on darwin.
 {
   cfg,
@@ -11,80 +11,15 @@ let
     jwt = "AUTHELIA_JWT_SECRET";
     session = "AUTHELIA_SESSION_SECRET";
     storage = "AUTHELIA_STORAGE_KEY";
-    oidc-hmac = "AUTHELIA_OIDC_HMAC";
-    oidc-jwk = "AUTHELIA_OIDC_JWK";
   };
-
-  settings = {
-    server.address = "tcp://:9091/";
-    log.level = "info";
-    theme = "auto";
-    authentication_backend = {
-      file = {
-        path = "/etc/authelia/users.yml";
-        watch = false;
-      };
-      password_reset.disable = true;
-    };
-    webauthn = {
-      display_name = hostName;
-      enable_passkey_login = true;
-    };
-    access_control = {
-      default_policy = "deny";
-      rules = [
-        # Unused name: Authelia only shows passkey (WebAuthn) registration once some rule needs two_factor.
-        {
-          domain = [ "2fa.${domain}" ];
-          policy = "two_factor";
-        }
-        {
-          domain = [ "*.${domain}" ];
-          policy = "one_factor";
-        }
-      ];
-    };
-    session.cookies = [
-      {
-        inherit domain;
-        authelia_url = "https://auth.${domain}";
-      }
-    ];
-    storage.local.path = "/config/db.sqlite3";
-    # No mail server: one-time codes (e.g. to register a passkey) land in this file.
-    notifier.filesystem.filename = "/config/notification.txt";
-  };
-
-  clients = [
-    {
-      client_id = "homarr";
-      client_name = "Homarr";
-      client_secret = "\${HOMARR_OIDC_SECRET_HASH}";
-      authorization_policy = "one_factor";
-      consent_mode = "implicit";
-      redirect_uris = [ "https://home.${domain}/api/auth/callback/oidc" ];
-      scopes = [
-        "openid"
-        "profile"
-        "groups"
-        "email"
-      ];
-      userinfo_signed_response_alg = "none";
-      token_endpoint_auth_method = "client_secret_basic";
-    }
-  ];
 in
 rec {
-  # Subdomain -> upstream behind forward auth; each gets a tailnet name via TSDProxy.
+  # Subdomain -> container upstream; each gets a tailnet name via TSDProxy.
   apps = {
     radarr = "radarr:7878";
     prowlarr = "prowlarr:9696";
     qbit = "qbittorrent:8080";
     requests = "seerr:5055";
-  };
-  # Subdomain -> upstream that logs in through Authelia OIDC itself.
-  oidcApps = {
-    home = "homarr:7575";
   };
 
   services = {
@@ -100,11 +35,9 @@ rec {
         PUID = toString cfg.uid;
         PGID = "20";
         TZ = cfg.timeZone;
-        X_AUTHELIA_CONFIG_FILTERS = "template";
         AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE = "/secrets/jwt";
         AUTHELIA_SESSION_SECRET_FILE = "/secrets/session";
         AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE = "/secrets/storage";
-        AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE = "/secrets/oidc-hmac";
       };
       volumes = [ "${cfg.stateDir}/authelia:/config" ];
       configs = [
@@ -138,29 +71,55 @@ rec {
   };
 
   configs = {
-    # YAML with JSON values; the signing key is a multi-line PEM, so it goes in through Authelia's template filter.
-    authelia.content =
-      builtins.concatStringsSep "" (
-        builtins.attrValues (builtins.mapAttrs (k: v: "${k}: ${builtins.toJSON v}\n") settings)
-      )
-      + ''
-        identity_providers:
-          oidc:
-            jwks:
-              - key: {{ secret "/secrets/oidc-jwk" | mindent 10 "|" | msquote }}
-            clients: ${builtins.toJSON clients}
-      '';
+    authelia.content = builtins.toJSON {
+      server.address = "tcp://:9091/";
+      log.level = "info";
+      theme = "auto";
+      authentication_backend = {
+        file = {
+          path = "/etc/authelia/users.yml";
+          watch = false;
+        };
+        password_reset.disable = true;
+      };
+      webauthn = {
+        display_name = hostName;
+        enable_passkey_login = true;
+      };
+      access_control = {
+        default_policy = "deny";
+        rules = [
+          # Unused name: Authelia only shows passkey (WebAuthn) registration once some rule needs two_factor.
+          {
+            domain = [ "2fa.${domain}" ];
+            policy = "two_factor";
+          }
+          {
+            domain = [ "*.${domain}" ];
+            policy = "one_factor";
+          }
+        ];
+      };
+      session.cookies = [
+        {
+          inherit domain;
+          authelia_url = "https://auth.${domain}";
+        }
+      ];
+      storage.local.path = "/config/db.sqlite3";
+      # No mail server: one-time codes (e.g. to register a passkey) land in this file.
+      notifier.filesystem.filename = "/config/notification.txt";
+    };
 
     "authelia-users".content = builtins.toJSON {
       users.${cfg.auth.user} = {
         displayname = cfg.auth.user;
         inherit (cfg.auth) email;
         password = "\${AUTHELIA_PASSWORD_HASH}";
-        groups = [ "admins" ];
       };
     };
 
-    # TSDProxy terminates TLS, so Caddy sees plain HTTP and must tell upstreams the real scheme.
+    # TSDProxy terminates TLS, so Caddy sees plain HTTP and must tell Authelia the real scheme.
     caddyfile.content = ''
       {
         admin off
@@ -188,16 +147,6 @@ rec {
           }
         '') apps
       )
-      ++ builtins.attrValues (
-        builtins.mapAttrs (name: upstream: ''
-
-          http://${name}.${domain} {
-            reverse_proxy ${upstream} {
-              header_up X-Forwarded-Proto https
-            }
-          }
-        '') oidcApps
-      )
     );
   }
   // builtins.listToAttrs (
@@ -207,8 +156,5 @@ rec {
     }) (builtins.attrNames secrets)
   );
 
-  envSecrets = builtins.attrValues secrets ++ [
-    "AUTHELIA_PASSWORD_HASH"
-    "HOMARR_OIDC_SECRET_HASH"
-  ];
+  envSecrets = builtins.attrValues secrets ++ [ "AUTHELIA_PASSWORD_HASH" ];
 }
