@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.homelab.orbstack;
+  orb = lib.getExe pkgs.orbstack;
 in
 {
   options.homelab.orbstack = {
@@ -22,13 +23,11 @@ in
     environment.systemPackages = [ pkgs.orbstack ];
 
     launchd.user.agents.orbstack = {
-      command = "${lib.getExe pkgs.orbstack} start";
+      script = ''
+        ${orb} config set memory_mib ${toString cfg.memoryMiB}
+        ${orb} start
+      '';
       serviceConfig.RunAtLoad = true;
     };
-
-    # Applies once OrbStack has started; harmless no-op before that.
-    system.activationScripts.postActivation.text = ''
-      sudo -u ${config.system.primaryUser} ${lib.getExe pkgs.orbstack} config set memory_mib ${toString cfg.memoryMiB} || true
-    '';
   };
 }
