@@ -21,7 +21,6 @@ rec {
     qbit = "qbittorrent:8080";
     requests = "seerr:5055";
     subs = "bazarr:6767";
-    subsync = "subsyncarr:3000";
   };
   # Subdomain -> upstream reachable without login (still tailnet-only).
   openApps = {
