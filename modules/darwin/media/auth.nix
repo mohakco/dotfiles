@@ -89,6 +89,11 @@ rec {
       access_control = {
         default_policy = "deny";
         rules = [
+          # Unused name: Authelia only shows passkey (WebAuthn) registration once some rule needs two_factor.
+          {
+            domain = [ "2fa.${domain}" ];
+            policy = "two_factor";
+          }
           {
             domain = [ "*.${domain}" ];
             policy = "one_factor";
