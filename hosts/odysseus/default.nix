@@ -9,6 +9,7 @@
     inputs.determinate.darwinModules.default
     inputs.home-manager.darwinModules.home-manager
     inputs.sops-nix.darwinModules.sops
+    ../../modules/darwin
   ];
 
   nixpkgs.hostPlatform = "aarch64-darwin";
@@ -49,11 +50,20 @@
   # Kept on Homebrew's tailscaled for now: switching drops the SSH session to the Mac.
   # services.tailscale.enable = true;
 
-  # Fallback PATH for brew (tailscale) and OrbStack (docker) until they move to Nix.
-  environment.systemPath = [
-    "/opt/homebrew/bin"
-    "/Users/${user}/.orbstack/bin"
-  ];
+  # Fallback PATH for brew's tailscale until it moves to Nix.
+  environment.systemPath = [ "/opt/homebrew/bin" ];
+
+  homelab = {
+    orbstack = {
+      enable = true;
+      memoryMiB = 6144;
+    };
+    jellyfin = {
+      enable = true;
+      mediaDir = "/Volumes/sandisk/data";
+      tailscaleServe = true;
+    };
+  };
 
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
