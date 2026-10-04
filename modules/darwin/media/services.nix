@@ -66,6 +66,7 @@ let
             };
           })
           (tile "Bazarr" (url "subs") "bazarr.png" "Subtitles" { })
+          (tile "Subsyncarr" (url "subsync") "mdi-subtitles-outline" "Subtitle sync" { })
           (tile "qBittorrent" (url "qbit") "qbittorrent.png" "Torrents" {
             widget = {
               type = "qbittorrent";
@@ -204,6 +205,23 @@ in
       image = "lscr.io/linuxserver/bazarr:v1.6.2-ls366";
       volumes = [
         "${state "bazarr"}:/config"
+        data
+      ];
+    };
+
+    # Re-syncs every subtitle with three engines into extra files; originals stay untouched.
+    subsyncarr = app "subsyncarr" 3000 {
+      image = "mrorbitman/subsyncarr:1.4.0";
+      ports = [ "127.0.0.1:3001:3000" ];
+      environment = {
+        CRON_SCHEDULE = "0 * * * *";
+        SCAN_PATHS = "/data/media/movies";
+        MAX_CONCURRENT_SYNC_TASKS = 1;
+        INCLUDE_ENGINES = "ffsubsync,autosubsync,alass";
+      };
+      deploy.resources.limits.memory = "768M";
+      volumes = [
+        "${state "subsyncarr"}:/app/data"
         data
       ];
     };
