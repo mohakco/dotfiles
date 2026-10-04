@@ -19,9 +19,21 @@ let
   ]
   ++ auth.envSecrets;
 
+  project = lib.recursiveUpdate (import ./services.nix { inherit cfg lib auth; }) {
+    inherit (auth) services configs;
+  };
+  # Compose does not recreate a container when only its inline config content changes; a hash label does.
+  configHash =
+    svc:
+    builtins.hashString "sha256" (
+      lib.concatMapStrings (c: project.configs.${c.source}.content) (svc.configs or [ ])
+    );
   compose = (pkgs.formats.yaml { }).generate "compose.yaml" (
-    lib.recursiveUpdate (import ./services.nix { inherit cfg lib auth; }) {
-      inherit (auth) services configs;
+    project
+    // {
+      services = lib.mapAttrs (
+        _: svc: lib.recursiveUpdate svc { labels."nix.config-hash" = configHash svc; }
+      ) project.services;
     }
   );
   init = import ./init.nix {
