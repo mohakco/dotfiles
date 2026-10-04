@@ -28,6 +28,57 @@ let
       ports = [ "127.0.0.1:${toString port}:${toString port}" ];
     } extra;
 
+  url = name: "https://${name}.${cfg.tailnet}";
+  tile = name: href: icon: description: extra: {
+    ${name} = {
+      inherit href icon description;
+    }
+    // extra;
+  };
+  homepage = {
+    settings = {
+      title = "odysseus";
+      theme = "dark";
+      headerStyle = "clean";
+    };
+    widgets = [ ];
+    services = [
+      {
+        Watch = [
+          (tile "Jellyfin" (url "odysseus") "jellyfin.png" "Movies" { })
+          (tile "Seerr" (url "requests") "jellyseerr.png" "Request a movie" { })
+        ];
+      }
+      {
+        Downloads = [
+          (tile "Radarr" (url "radarr") "radarr.png" "Movies" {
+            widget = {
+              type = "radarr";
+              url = "http://radarr:7878";
+              key = "{{HOMEPAGE_VAR_RADARR_KEY}}";
+            };
+          })
+          (tile "Prowlarr" (url "prowlarr") "prowlarr.png" "Indexers" {
+            widget = {
+              type = "prowlarr";
+              url = "http://prowlarr:9696";
+              key = "{{HOMEPAGE_VAR_PROWLARR_KEY}}";
+            };
+          })
+          (tile "qBittorrent" (url "qbit") "qbittorrent.png" "Torrents" {
+            widget = {
+              type = "qbittorrent";
+              url = "http://qbittorrent:8080";
+            };
+          })
+        ];
+      }
+      {
+        System = [ (tile "Authelia" (url "auth") "authelia.png" "Login and passkeys" { }) ];
+      }
+    ];
+  };
+
   arr = name: port: key: image: {
     inherit image;
     environment = {
@@ -157,6 +208,22 @@ in
       volumes = [ "${state "seerr"}:/app/config" ];
     };
 
+    # Dashboard; every tile and widget comes from the Nix-generated YAML below.
+    homepage = {
+      image = "ghcr.io/gethomepage/homepage:v2.4.0";
+      container_name = "homepage";
+      restart = "unless-stopped";
+      environment = {
+        HOMEPAGE_ALLOWED_HOSTS = "home.${cfg.tailnet}";
+        HOMEPAGE_VAR_RADARR_KEY = "\${RADARR_API_KEY}";
+        HOMEPAGE_VAR_PROWLARR_KEY = "\${PROWLARR_API_KEY}";
+      };
+      configs = map (name: {
+        source = "homepage-${name}";
+        target = "/app/config/${name}.yaml";
+      }) (lib.attrNames homepage);
+    };
+
     # One-shot, run by `media sync` after the apps are up.
     configarr = {
       image = "ghcr.io/raydak-labs/configarr:1.34.0";
@@ -196,13 +263,15 @@ in
       log.level = "info";
       proxyAccessLog = false;
     };
-  };
-
-  configs."tsdproxy-apps".content = builtins.toJSON (
-    lib.genAttrs ([ "auth" ] ++ lib.attrNames auth.apps) (_: {
-      ports."443/https".targets = [ "http://caddy:8099" ];
-    })
-  );
+    "tsdproxy-apps".content = builtins.toJSON (
+      lib.genAttrs ([ "auth" ] ++ lib.attrNames (auth.apps // auth.openApps)) (_: {
+        ports."443/https".targets = [ "http://caddy:8099" ];
+      })
+    );
+  }
+  // lib.mapAttrs' (
+    name: value: lib.nameValuePair "homepage-${name}" { content = builtins.toJSON value; }
+  ) homepage;
 
   secrets.ts_authkey.environment = "TS_AUTHKEY";
 }

@@ -21,6 +21,10 @@ rec {
     qbit = "qbittorrent:8080";
     requests = "seerr:5055";
   };
+  # Subdomain -> upstream reachable without login (still tailnet-only).
+  openApps = {
+    home = "homepage:3000";
+  };
 
   services = {
     authelia = {
@@ -146,6 +150,14 @@ rec {
             reverse_proxy ${upstream}
           }
         '') apps
+      )
+      ++ builtins.attrValues (
+        builtins.mapAttrs (name: upstream: ''
+
+          http://${name}.${domain} {
+            reverse_proxy ${upstream}
+          }
+        '') openApps
       )
     );
   }
