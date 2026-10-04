@@ -161,6 +161,9 @@ in
     homarr = app "homarr" 7575 {
       image = "ghcr.io/homarr-labs/homarr:v2.1.2";
       environment = {
+        # docker.sock is root-only (0660 root:root) inside OrbStack's VM.
+        PUID = "0";
+        PGID = "0";
         SECRET_ENCRYPTION_KEY = "\${HOMARR_SECRET_KEY}";
         BASE_URL = "https://home.${cfg.tailnet}";
         AUTH_PROVIDERS = "oidc";
