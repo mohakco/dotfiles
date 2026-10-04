@@ -9,6 +9,7 @@
 
   programs = {
     fish.enable = true;
+    starship.enable = true;
     git.enable = true;
     gh.enable = true;
     zellij.enable = true;

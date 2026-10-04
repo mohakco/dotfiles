@@ -52,7 +52,10 @@
     "/Users/${user}/.orbstack/bin"
   ];
 
-  sops.age.keyFile = "/Users/${user}/.config/sops/age/keys.txt";
+  sops = {
+    defaultSopsFile = ../../secrets/secrets.yaml;
+    age.keyFile = "/Users/${user}/.config/sops/age/keys.txt";
+  };
 
   home-manager = {
     useGlobalPkgs = true;
