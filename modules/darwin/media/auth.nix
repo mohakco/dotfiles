@@ -20,6 +20,7 @@ rec {
     prowlarr = "prowlarr:9696";
     qbit = "qbittorrent:8080";
     requests = "seerr:5055";
+    subs = "bazarr:6767";
   };
   # Subdomain -> upstream reachable without login (still tailnet-only).
   openApps = {

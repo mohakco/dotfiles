@@ -15,11 +15,32 @@ pkgs.writeShellApplication {
     Q="http://127.0.0.1:8080/api/v2"
     S="http://127.0.0.1:5055/api/v1"
     R="http://127.0.0.1:7878/api/v3"
+    B="http://127.0.0.1:6767/api"
     jar=$(mktemp)
     trap 'rm -f "$jar"' EXIT
-    for url in "$J/health" "$Q/app/version" "$S/status" "$R/system/status?apikey=$RADARR_API_KEY"; do
+    for url in "$J/health" "$Q/app/version" "$S/status" "$R/system/status?apikey=$RADARR_API_KEY" "$B/system/ping"; do
       until curl -sf -o /dev/null "$url"; do sleep 3; done
     done
+
+    echo "bazarr"
+    # Bazarr generates its own API key on first start.
+    bkey=$(sed -n '/^auth:/,/^[a-z]/s/^  apikey: *//p' "${cfg.stateDir}/bazarr/config/config.yaml" | tr -d "'\"")
+    curl -sf -o /dev/null -H "X-API-KEY: $bkey" "$B/system/settings" \
+      --data-urlencode "languages-enabled=en" \
+      --data-urlencode 'languages-profiles=[{"profileId":1,"name":"English","cutoff":null,"items":[{"id":1,"language":"en","hi":"False","forced":"False","audio_exclude":"False"}],"mustContain":[],"mustNotContain":[],"originalFormat":false,"tag":null}]' \
+      --data-urlencode "settings-general-enabled_providers=podnapisi" \
+      --data-urlencode "settings-general-enabled_providers=yifysubtitles" \
+      --data-urlencode "settings-general-enabled_providers=embeddedsubtitles" \
+      --data-urlencode "settings-general-use_radarr=true" \
+      --data-urlencode "settings-general-movie_default_enabled=true" \
+      --data-urlencode "settings-general-movie_default_profile=1" \
+      --data-urlencode "settings-radarr-ip=radarr" \
+      --data-urlencode "settings-radarr-apikey=$RADARR_API_KEY" \
+      --data-urlencode "settings-proxy-type=socks5" \
+      --data-urlencode "settings-proxy-url=warp" \
+      --data-urlencode "settings-proxy-port=1080" \
+      --data-urlencode "settings-proxy-exclude=localhost" \
+      --data-urlencode "settings-proxy-exclude=radarr"
 
     echo "qbittorrent"
     curl -sf $Q/app/setPreferences --data-urlencode "json=$(jq -nc '{

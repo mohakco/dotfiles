@@ -65,6 +65,7 @@ let
               key = "{{HOMEPAGE_VAR_PROWLARR_KEY}}";
             };
           })
+          (tile "Bazarr" (url "subs") "bazarr.png" "Subtitles" { })
           (tile "qBittorrent" (url "qbit") "qbittorrent.png" "Torrents" {
             widget = {
               type = "qbittorrent";
@@ -198,6 +199,14 @@ in
         volumes = [ "${state "prowlarr"}:/config" ];
       }
     );
+
+    bazarr = app "bazarr" 6767 {
+      image = "lscr.io/linuxserver/bazarr:v1.6.2-ls366";
+      volumes = [
+        "${state "bazarr"}:/config"
+        data
+      ];
+    };
 
     seerr = app "seerr" 5055 {
       image = "ghcr.io/seerr-team/seerr:v3.5.0";
