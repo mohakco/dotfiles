@@ -12,8 +12,9 @@
     fish.enable = true;
     starship.enable = true;
     git.enable = true;
-    gh.enable = true;
-    zellij.enable = true;
+    # gh and zellij stay on Homebrew for now (in use); enable to move them to Nix.
+    # gh.enable = true;
+    # zellij.enable = true;
     btop.enable = true;
   };
 }
