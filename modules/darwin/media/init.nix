@@ -11,11 +11,13 @@ pkgs.writeShellApplication {
     pkgs.jq
   ];
   text = ''
-    J=http://127.0.0.1:8096 Q=http://127.0.0.1:8080/api/v2 S=http://127.0.0.1:5055/api/v1 R=http://127.0.0.1:7878/api/v3
-    USER=admin
+    J="http://127.0.0.1:8096"
+    Q="http://127.0.0.1:8080/api/v2"
+    S="http://127.0.0.1:5055/api/v1"
+    R="http://127.0.0.1:7878/api/v3"
     jar=$(mktemp)
     trap 'rm -f "$jar"' EXIT
-    for url in $J/health $Q/app/version $S/status $R/system/status?apikey=$RADARR_API_KEY; do
+    for url in "$J/health" "$Q/app/version" "$S/status" "$R/system/status?apikey=$RADARR_API_KEY"; do
       until curl -sf -o /dev/null "$url"; do sleep 3; done
     done
 
