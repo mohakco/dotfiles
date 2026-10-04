@@ -157,6 +157,28 @@ in
       volumes = [ "${state "seerr"}:/app/config" ];
     };
 
+    # Dashboard; layout lives in its own database, login is Authelia OIDC (admin = Authelia group "admins").
+    homarr = app "homarr" 7575 {
+      image = "ghcr.io/homarr-labs/homarr:v2.1.2";
+      environment = {
+        SECRET_ENCRYPTION_KEY = "\${HOMARR_SECRET_KEY}";
+        BASE_URL = "https://home.${cfg.tailnet}";
+        AUTH_PROVIDERS = "oidc";
+        AUTH_OIDC_ISSUER = "https://auth.${cfg.tailnet}";
+        AUTH_OIDC_CLIENT_ID = "homarr";
+        AUTH_OIDC_CLIENT_SECRET = "\${HOMARR_OIDC_SECRET}";
+        AUTH_OIDC_CLIENT_NAME = "Authelia";
+        AUTH_OIDC_AUTO_LOGIN = "true";
+        # Authelia only returns groups/email from the userinfo endpoint.
+        AUTH_OIDC_FORCE_USERINFO = "true";
+        AUTH_LOGOUT_REDIRECT_URL = "https://auth.${cfg.tailnet}/logout";
+      };
+      volumes = [
+        "${state "homarr"}:/appdata"
+        "/var/run/docker.sock:/var/run/docker.sock:ro"
+      ];
+    };
+
     # One-shot, run by `media sync` after the apps are up.
     configarr = {
       image = "ghcr.io/raydak-labs/configarr:1.34.0";
@@ -199,7 +221,7 @@ in
   };
 
   configs."tsdproxy-apps".content = builtins.toJSON (
-    lib.genAttrs ([ "auth" ] ++ lib.attrNames auth.apps) (_: {
+    lib.genAttrs ([ "auth" ] ++ lib.attrNames (auth.apps // auth.oidcApps)) (_: {
       ports."443/https".targets = [ "http://caddy:8099" ];
     })
   );

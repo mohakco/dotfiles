@@ -7,6 +7,7 @@ Nix flake for my machines. Today: `odysseus`, a Mac mini M4 running a media serv
 | URL (tailnet only) | What |
 |---|---|
 | `https://odysseus.impala-codlet.ts.net` | Jellyfin (own login; Infuse uses `admin` + the shared password) |
+| `https://home.impala-codlet.ts.net` | Homarr dashboard (Authelia OIDC; onboarding admin group: `admins`) |
 | `https://requests.impala-codlet.ts.net` | Seerr |
 | `https://radarr.…`, `prowlarr.…`, `qbit.…` | Radarr, Prowlarr, qBittorrent |
 | `https://auth.impala-codlet.ts.net` | Authelia: passkey (or password) login in front of everything except Jellyfin |

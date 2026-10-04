@@ -16,6 +16,8 @@ let
     "RADARR_API_KEY"
     "PROWLARR_API_KEY"
     "TS_AUTHKEY"
+    "HOMARR_SECRET_KEY"
+    "HOMARR_OIDC_SECRET"
   ]
   ++ auth.envSecrets;
 
