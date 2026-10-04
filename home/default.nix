@@ -8,13 +8,21 @@
     pkgs.tree
   ];
 
+  xdg.configFile."zellij/config.kdl".source = ./zellij/config.kdl;
+
   programs = {
     fish.enable = true;
     starship.enable = true;
     git.enable = true;
-    # gh and zellij stay on Homebrew for now (in use); enable to move them to Nix.
-    # gh.enable = true;
-    # zellij.enable = true;
+    gh = {
+      enable = true;
+      settings.aliases.co = "pr checkout";
+    };
+    zellij = {
+      enable = true;
+      # Integration would auto-start zellij in every fish shell.
+      enableFishIntegration = false;
+    };
     btop.enable = true;
   };
 }
