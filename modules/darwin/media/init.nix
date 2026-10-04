@@ -27,7 +27,7 @@ pkgs.writeShellApplication {
     bkey=$(sed -n '/^auth:/,/^[a-z]/s/^  apikey: *//p' "${cfg.stateDir}/bazarr/config/config.yaml" | tr -d "'\"")
     curl -sf -o /dev/null -H "X-API-KEY: $bkey" "$B/system/settings" \
       --data-urlencode "languages-enabled=en" \
-      --data-urlencode 'languages-profiles=[{"profileId":1,"name":"English","cutoff":null,"items":[{"id":1,"language":"en","hi":"False","forced":"False","audio_exclude":"False"}],"mustContain":[],"mustNotContain":[],"originalFormat":false,"tag":null}]' \
+      --data-urlencode 'languages-profiles=[{"profileId":1,"name":"English","cutoff":null,"items":[{"id":1,"language":"en","hi":"False","forced":"False","audio_exclude":"False","audio_only_include":"False"}],"mustContain":[],"mustNotContain":[],"originalFormat":false,"tag":null}]' \
       --data-urlencode "settings-general-enabled_providers=podnapisi" \
       --data-urlencode "settings-general-enabled_providers=yifysubtitles" \
       --data-urlencode "settings-general-enabled_providers=embeddedsubtitles" \
