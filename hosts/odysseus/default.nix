@@ -54,14 +54,27 @@
   environment.systemPath = [ "/opt/homebrew/bin" ];
 
   homelab = {
-    orbstack = {
+    orbstack.memoryMiB = 6144;
+    media = {
       enable = true;
-      memoryMiB = 6144;
-    };
-    jellyfin = {
-      enable = true;
-      mediaDir = "/Volumes/sandisk/data";
-      tailscaleServe = true;
+      dataDir = "/Volumes/sandisk/data";
+      tailnet = "impala-codlet.ts.net";
+      timeZone = "Asia/Kolkata";
+      metadataCountry = "IN";
+      indexers = [
+        "1337x"
+        "thepiratebay"
+        "yts"
+        "limetorrents"
+        "knaben"
+        "nyaasi"
+      ];
+      cloudflareIndexers = [ "1337x" ];
+      quality = {
+        minMbPerMin = 10;
+        preferredMbPerMin = 20;
+        maxMbPerMin = 35;
+      };
     };
   };
 
