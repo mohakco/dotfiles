@@ -36,6 +36,8 @@ pkgs.writeShellApplication {
       --data-urlencode "settings-general-movie_default_profile=1" \
       --data-urlencode "settings-radarr-ip=radarr" \
       --data-urlencode "settings-radarr-apikey=$RADARR_API_KEY" \
+      --data-urlencode "settings-subsync-use_subsync=true" \
+      --data-urlencode "settings-subsync-use_subsync_movie_threshold=false" \
       --data-urlencode "settings-proxy-type=socks5" \
       --data-urlencode "settings-proxy-url=warp" \
       --data-urlencode "settings-proxy-port=1080" \
