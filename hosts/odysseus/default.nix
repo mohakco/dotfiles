@@ -74,6 +74,9 @@
         "nyaasi"
       ];
       cloudflareIndexers = [ "1337x" ];
+      # No seeding: qBittorrent stops a torrent when it finishes, Radarr removes it after import.
+      seedRatio = 0;
+      seedDays = 0;
       quality = {
         minMbPerMin = 10;
         preferredMbPerMin = 20;

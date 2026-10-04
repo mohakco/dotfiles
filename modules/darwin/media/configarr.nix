@@ -21,6 +21,7 @@ in
         type = "qbittorrent";
         enable = true;
         priority = 1;
+        remove_completed_downloads = true;
         fields = {
           host = "qbittorrent";
           port = 8080;
