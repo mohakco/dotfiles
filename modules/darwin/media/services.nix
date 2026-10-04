@@ -1,4 +1,8 @@
-{ cfg, lib }:
+{
+  cfg,
+  lib,
+  auth,
+}:
 let
   ids = {
     PUID = toString cfg.uid;
@@ -14,26 +18,21 @@ let
     bind.create_host_path = false;
   };
 
-  # A web app published on 127.0.0.1 and on https://<tsName>.<tailnet> via TSDProxy.
+  # A web app on 127.0.0.1 only; the tailnet reaches it through Caddy + Authelia.
   app =
-    name: port: tsName: extra:
+    name: port: extra:
     lib.recursiveUpdate {
       container_name = name;
       restart = "unless-stopped";
       environment = ids;
       ports = [ "127.0.0.1:${toString port}:${toString port}" ];
-      labels = {
-        "tsdproxy.enable" = "true";
-        "tsdproxy.name" = tsName;
-        "tsdproxy.port.1" = "443/https:${toString port}/http";
-      };
     } extra;
 
   arr = name: port: key: image: {
     inherit image;
     environment = {
       "${lib.toUpper name}__AUTH__APIKEY" = "\${${key}}";
-      # Tailnet-only access is the auth until authentik fronts these (P5).
+      # Authelia in front of Caddy is the login.
       "${lib.toUpper name}__AUTH__METHOD" = "External";
     };
   };
@@ -92,10 +91,11 @@ in
       };
     };
 
-    tsdproxy = app "tsdproxy" 8088 "tsdproxy" {
+    # One tailnet machine per gated app, all pointing at Caddy, which routes by Host.
+    tsdproxy = {
       image = "almeidapaulopt/tsdproxy:2.3.4";
-      ports = [ "127.0.0.1:8088:8080" ];
-      labels."tsdproxy.port.1" = "443/https:8080/http";
+      container_name = "tsdproxy";
+      restart = "unless-stopped";
       secrets = [ "ts_authkey" ];
       volumes = [
         "/var/run/docker.sock:/var/run/docker.sock"
@@ -106,10 +106,14 @@ in
           source = "tsdproxy";
           target = "/config/tsdproxy.yaml";
         }
+        {
+          source = "tsdproxy-apps";
+          target = "/config/apps.yaml";
+        }
       ];
     };
 
-    qbittorrent = app "qbittorrent" 8080 "qbit" {
+    qbittorrent = app "qbittorrent" 8080 {
       image = "lscr.io/linuxserver/qbittorrent:5.2.4_v2.0.15-ls479";
       environment = {
         WEBUI_PORT = 8080;
@@ -126,7 +130,7 @@ in
       ];
     };
 
-    radarr = app "radarr" 7878 "radarr" (
+    radarr = app "radarr" 7878 (
       arr "radarr" 7878 "RADARR_API_KEY" "lscr.io/linuxserver/radarr:6.4.4.10685-ls318"
       // {
         extra_hosts = [ "host.docker.internal:host-gateway" ];
@@ -137,14 +141,14 @@ in
       }
     );
 
-    prowlarr = app "prowlarr" 9696 "prowlarr" (
+    prowlarr = app "prowlarr" 9696 (
       arr "prowlarr" 9696 "PROWLARR_API_KEY" "lscr.io/linuxserver/prowlarr:2.6.5.5623-ls162"
       // {
         volumes = [ "${state "prowlarr"}:/config" ];
       }
     );
 
-    seerr = app "seerr" 5055 "requests" {
+    seerr = app "seerr" 5055 {
       image = "ghcr.io/seerr-team/seerr:v3.5.0";
       init = true;
       user = "${ids.PUID}:${ids.PGID}";
@@ -184,11 +188,21 @@ in
         providers.default.authKeyFile = "/run/secrets/ts_authkey";
         dataDir = "/data/";
       };
+      lists.apps = {
+        filename = "/config/apps.yaml";
+        defaultProxyProvider = "default";
+      };
       http.port = 8080;
       log.level = "info";
       proxyAccessLog = false;
     };
   };
+
+  configs."tsdproxy-apps".content = builtins.toJSON (
+    lib.genAttrs ([ "auth" ] ++ lib.attrNames auth.apps) (_: {
+      ports."443/https".targets = [ "http://caddy:8099" ];
+    })
+  );
 
   secrets.ts_authkey.environment = "TS_AUTHKEY";
 }

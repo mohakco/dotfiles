@@ -59,6 +59,10 @@
       enable = true;
       dataDir = "/Volumes/sandisk/data";
       tailnet = "impala-codlet.ts.net";
+      auth = {
+        inherit user;
+        email = "mohakmalhotra0209@gmail.com";
+      };
       timeZone = "Asia/Kolkata";
       metadataCountry = "IN";
       indexers = [

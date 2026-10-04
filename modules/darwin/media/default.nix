@@ -7,15 +7,22 @@
 let
   cfg = config.homelab.media;
   home = config.users.users.${config.system.primaryUser}.home;
+  auth = import ./auth.nix {
+    inherit cfg;
+    inherit (config.networking) hostName;
+  };
   secrets = [
     "ADMIN_PASSWORD"
     "RADARR_API_KEY"
     "PROWLARR_API_KEY"
     "TS_AUTHKEY"
-  ];
+  ]
+  ++ auth.envSecrets;
 
   compose = (pkgs.formats.yaml { }).generate "compose.yaml" (
-    import ./services.nix { inherit cfg lib; }
+    lib.recursiveUpdate (import ./services.nix { inherit cfg lib auth; }) {
+      inherit (auth) services configs;
+    }
   );
   init = import ./init.nix {
     inherit cfg pkgs;
@@ -64,6 +71,13 @@ in
       default = "${home}/.local/share/media";
     };
     tailnet = lib.mkOption { type = lib.types.str; };
+    auth = {
+      user = lib.mkOption {
+        type = lib.types.str;
+        description = "The only Authelia user; signs in with a passkey.";
+      };
+      email = lib.mkOption { type = lib.types.str; };
+    };
     timeZone = lib.mkOption {
       type = lib.types.str;
       default = "UTC";
@@ -119,7 +133,8 @@ in
     sops.secrets = lib.genAttrs secrets (_: { });
     sops.templates."media.env" = {
       owner = config.system.primaryUser;
-      content = lib.concatMapStrings (k: "${k}=${config.sops.placeholder.${k}}\n") secrets;
+      # Single quotes: the Authelia password hash contains `$`, which the shell would expand.
+      content = lib.concatMapStrings (k: "${k}='${config.sops.placeholder.${k}}'\n") secrets;
     };
 
     # A new compose file changes this agent, so every switch that touches the stack re-syncs it.
