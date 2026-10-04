@@ -1,0 +1,63 @@
+{
+  inputs,
+  pkgs,
+  user,
+  ...
+}:
+{
+  imports = [
+    inputs.determinate.darwinModules.default
+    inputs.home-manager.darwinModules.home-manager
+    inputs.sops-nix.darwinModules.sops
+  ];
+
+  nixpkgs.hostPlatform = "aarch64-darwin";
+  system = {
+    primaryUser = user;
+    stateVersion = 6;
+  };
+
+  networking = {
+    hostName = "odysseus";
+    computerName = "odysseus";
+    localHostName = "odysseus";
+  };
+
+  # knownUsers is the only way nix-darwin can set the login shell of an existing user.
+  users.knownUsers = [ user ];
+  users.users.${user} = {
+    uid = 501;
+    home = "/Users/${user}";
+    shell = pkgs.fish;
+  };
+  programs.fish.enable = true;
+
+  # Determinate Nixd owns nix.conf and garbage collection (automatic by default).
+  determinateNix.enable = true;
+
+  power = {
+    sleep = {
+      computer = "never";
+      harddisk = "never";
+    };
+    restartAfterPowerFailure = true;
+  };
+
+  # Kept on Homebrew's tailscaled for now: switching drops the SSH session to the Mac.
+  # services.tailscale.enable = true;
+
+  # Fallback PATH for brew (tailscale) and OrbStack (docker) until they move to Nix.
+  environment.systemPath = [
+    "/opt/homebrew/bin"
+    "/Users/${user}/.orbstack/bin"
+  ];
+
+  sops.age.keyFile = "/Users/${user}/.config/sops/age/keys.txt";
+
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "bak";
+    users.${user} = import ../../home;
+  };
+}

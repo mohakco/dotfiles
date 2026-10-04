@@ -1,0 +1,6 @@
+keys:
+  - &odysseus age1wqel55d5f84wtve3nsxzjsasm7rmtelxjdk67zw040ztzgffpsuqphqqk5
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - age: [*odysseus]
