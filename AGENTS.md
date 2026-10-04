@@ -1,4 +1,4 @@
-# maclab
+# dotfiles
 
 Personal Nix flake for every machine (nix-darwin + home-manager + sops-nix). Single user, no sharing concerns. Hosts live in `hosts/<name>/`, reusable modules in `modules/darwin/` under the `homelab.*` namespace, shared home config in `home/`.
 
