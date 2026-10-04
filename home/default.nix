@@ -5,6 +5,7 @@
   home.packages = [
     pkgs.age
     pkgs.sops
+    pkgs.tree
   ];
 
   programs = {
