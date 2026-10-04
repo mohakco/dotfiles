@@ -45,7 +45,8 @@ let
       # Seeded once: qBittorrent rewrites this file, the rest of its settings come from media-init.
       cp -n ${./qBittorrent.conf} "${cfg.stateDir}/qbittorrent/qBittorrent/qBittorrent.conf" || true
       dc up -d --wait --remove-orphans
-      dc run --rm configarr
+      # A cold FlareSolverr can time out Prowlarr's indexer test on the first run; it passes once warm.
+      dc run --rm configarr || dc run --rm configarr
       media-init
       curl -sf localhost:5055/api/v1/status | grep -q '"restartRequired":true' && dc restart seerr || true
     '';
