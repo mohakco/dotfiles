@@ -35,6 +35,9 @@
   # Determinate Nixd owns nix.conf and garbage collection (automatic by default).
   determinateNix.enable = true;
 
+  # Headless, so no Touch ID sudo; writing /etc/pam.d also fails over Tailscale SSH (no Full Disk Access).
+  security.pam.services.sudo_local.enable = false;
+
   power = {
     sleep = {
       computer = "never";
