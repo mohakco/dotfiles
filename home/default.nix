@@ -1,6 +1,9 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   home.stateVersion = "26.05";
+
+  # sops on macOS otherwise looks under ~/Library/Application Support.
+  home.sessionVariables.SOPS_AGE_KEY_FILE = "${config.xdg.configHome}/sops/age/keys.txt";
 
   home.packages = [
     pkgs.age
